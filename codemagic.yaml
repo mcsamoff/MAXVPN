@@ -5,9 +5,6 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      vars:
-        PACKAGE_NAME: "com.xrayvpn.client"
-        APP_NAME: "Xray VPN"
       flutter: stable
 
     cache:
@@ -15,41 +12,44 @@ workflows:
         - ~/.pub-cache
 
     scripts:
-      - name: 📱 Setup Flutter environment
+      - name: 📱 Setup Flutter
         script: |
-          echo "=== Flutter Environment Setup ==="
-          echo "FLUTTER_ROOT: $FLUTTER_ROOT"
-          
-          # Добавляем пути в PATH
           export PATH="$PATH":"$FLUTTER_ROOT/bin"
-          export PATH="$PATH":"$FLUTTER_ROOT/.pub-cache/bin"
-          
-          # Проверяем версии
-          $FLUTTER_ROOT/bin/flutter doctor -v
-          $FLUTTER_ROOT/bin/dart --version
+          $FLUTTER_ROOT/bin/flutter doctor
 
-      - name: 🧹 Clean and prepare
+      - name: 📁 Check/Create project
         script: |
-          cd $CM_BUILD_DIR
-          $FLUTTER_ROOT/bin/flutter clean
-          rm -f pubspec.lock
+          export PATH="$PATH":"$FLUTTER_ROOT/bin"
+          
+          if [ ! -f "pubspec.yaml" ]; then
+            echo "Creating new Flutter project..."
+            $FLUTTER_ROOT/bin/flutter create --org com.xrayvpn --project-name xray_vpn .
+          fi
+          
+          echo "Project files:"
+          ls -la
 
       - name: 📦 Install dependencies
         script: |
+          export PATH="$PATH":"$FLUTTER_ROOT/bin"
+          
+          echo "Cleaning..."
+          $FLUTTER_ROOT/bin/flutter clean
+          rm -f pubspec.lock
+          
+          echo "Getting dependencies..."
           $FLUTTER_ROOT/bin/flutter pub get
+          
+          echo "Adding required packages..."
+          $FLUTTER_ROOT/bin/flutter pub add flutter_vpn permission_handler provider
 
-      - name: 🔧 Build release APK
+      - name: 🛠 Build APK
         script: |
+          export PATH="$PATH":"$FLUTTER_ROOT/bin"
           $FLUTTER_ROOT/bin/flutter build apk --release
 
-      - name: 📁 Rename APK
-        script: |
-          APK_NAME="XrayVPN_$(date +%Y%m%d_%H%M%S).apk"
-          mv build/app/outputs/flutter-apk/app-release.apk $APK_NAME
-          echo "APK_NAME=$APK_NAME" >> $CM_ENV
-
     artifacts:
-      - "*.apk"
+      - build/app/outputs/flutter-apk/*.apk
 
     publishing:
       email:
