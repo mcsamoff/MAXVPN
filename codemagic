@@ -1,0 +1,47 @@
+workflows:
+  xray-vpn-build:
+    name: Xray VPN APK Builder
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      vars:
+        PACKAGE_NAME: "com.xrayvpn.client"
+        APP_NAME: "Xray VPN"
+      flutter: stable
+
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+
+    scripts:
+      - name: 📱 Setup Flutter environment
+        script: |
+          flutter doctor
+          flutter clean
+
+      - name: 📦 Install dependencies
+        script: |
+          flutter pub get
+
+      - name: 🔧 Generate code (if needed)
+        script: |
+          flutter pub run build_runner build --delete-conflicting-outputs || echo "No build_runner"
+
+      - name: 🛠 Build release APK
+        script: |
+          flutter build apk --release
+
+      - name: 📁 Rename APK
+        script: |
+          APK_NAME="XrayVPN_$(date +%Y%m%d_%H%M%S).apk"
+          mv build/app/outputs/flutter-apk/app-release.apk $APK_NAME
+          echo "APK_NAME=$APK_NAME" >> $CM_ENV
+
+    artifacts:
+      - "*.apk"
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
