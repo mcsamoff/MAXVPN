@@ -8,9 +8,6 @@ workflows:
       - name: Build
         script: |
           flutter create --org com.vpn.app --project-name myapp .
-          cd myapp
           flutter build apk --release
-          cd ..
-          cp myapp/build/app/outputs/flutter-apk/app-release.apk .
     artifacts:
-      - "*.apk"
+      - "build/app/outputs/flutter-apk/*.apk"
