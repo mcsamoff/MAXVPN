@@ -1,51 +1,16 @@
 workflows:
-  xray-vpn-build:
-    name: Xray VPN Builder
+  build:
+    name: Build APK
     instance_type: mac_mini_m2
     environment:
       flutter: stable
     scripts:
-      - name: Setup Android SDK
+      - name: Build
         script: |
-          echo "Setting up Android SDK..."
-          sdkmanager "platforms;android-33" "build-tools;33.0.0"
-          
-      - name: Create Flutter project
-        script: |
-          echo "Creating Flutter project..."
-          flutter create --org com.xray.vpn --project-name xrayvpn --platforms android .
-          
-      - name: Fix permissions
-        script: |
-          echo "Fixing permissions..."
-          chmod +x android/gradlew
-          
-      - name: Clean build
-        script: |
-          echo "Cleaning previous builds..."
-          flutter clean
-          cd android
-          ./gradlew clean
-          cd ..
-          
-      - name: Get dependencies
-        script: |
-          echo "Getting dependencies..."
-          flutter pub get
-          
-      - name: Build APK
-        script: |
-          echo "Building APK..."
+          flutter create --org com.xray.vpn --project-name app .
+          cd app
           flutter build apk --release
-          
-          echo "Checking if APK exists..."
-          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
-            echo "✅ APK built successfully!"
-            ls -la build/app/outputs/flutter-apk/
-          else
-            echo "❌ APK not found, trying debug build..."
-            flutter build apk --debug
-          fi
-          
+          cd ..
+          cp app/build/app/outputs/flutter-apk/app-release.apk .
     artifacts:
-      - "build/app/outputs/flutter-apk/*.apk"
+      - "*.apk"
