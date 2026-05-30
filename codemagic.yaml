@@ -11,7 +11,7 @@ workflows:
       - name: Create pubspec.yaml
         script: |
           cat > pubspec.yaml << 'EOF'
-      name: xrayvpn
+      
       description: Xray VPN Client
       version: 1.0.0+1
       publish_to: none
