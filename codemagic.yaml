@@ -5,11 +5,47 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Create project
+      - name: Setup Android SDK
         script: |
-          flutter create --org com.xray.vpn --project-name xrayvpn .
+          echo "Setting up Android SDK..."
+          sdkmanager "platforms;android-33" "build-tools;33.0.0"
+          
+      - name: Create Flutter project
+        script: |
+          echo "Creating Flutter project..."
+          flutter create --org com.xray.vpn --project-name xrayvpn --platforms android .
+          
+      - name: Fix permissions
+        script: |
+          echo "Fixing permissions..."
+          chmod +x android/gradlew
+          
+      - name: Clean build
+        script: |
+          echo "Cleaning previous builds..."
+          flutter clean
+          cd android
+          ./gradlew clean
+          cd ..
+          
+      - name: Get dependencies
+        script: |
+          echo "Getting dependencies..."
+          flutter pub get
+          
       - name: Build APK
         script: |
+          echo "Building APK..."
           flutter build apk --release
+          
+          echo "Checking if APK exists..."
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            echo "✅ APK built successfully!"
+            ls -la build/app/outputs/flutter-apk/
+          else
+            echo "❌ APK not found, trying debug build..."
+            flutter build apk --debug
+          fi
+          
     artifacts:
-      - build/app/outputs/flutter-apk/*.apk
+      - "build/app/outputs/flutter-apk/*.apk"
