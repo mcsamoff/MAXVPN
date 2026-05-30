@@ -1,16 +1,11 @@
 workflows:
   build:
-    name: Build APK
+    name: Build
     instance_type: mac_mini_m2
     environment:
       flutter: stable
     scripts:
-      - name: Build
-        script: |
-          flutter create --org com.xray.vpn --project-name app .
-          cd app
-          flutter build apk --release
-          cd ..
-          cp app/build/app/outputs/flutter-apk/app-release.apk .
+      - flutter create --org com.vpn.app --project-name vpn .
+      - cd vpn && flutter build apk --release
     artifacts:
-      - "*.apk"
+      - vpn/build/app/outputs/flutter-apk/*.apk
