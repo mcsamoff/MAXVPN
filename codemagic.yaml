@@ -13,112 +13,110 @@ workflows:
         - android/.gradle
 
     scripts:
-      - name: 🔍 STEP 1 - Diagnostic
+      - name: 📱 Check Flutter
         script: |
-          echo "=== DIAGNOSTIC START ==="
-          echo "Current directory: $(pwd)"
           export PATH="$PATH":"$FLUTTER_ROOT/bin"
-          $FLUTTER_ROOT/bin/flutter --version
+          $FLUTTER_ROOT/bin/flutter doctor
 
-      - name: 📁 STEP 2 - Create project
+      - name: 📁 Create project
         script: |
           export PATH="$PATH":"$FLUTTER_ROOT/bin"
           
           if [ ! -f "pubspec.yaml" ]; then
             $FLUTTER_ROOT/bin/flutter create --org com.xrayvpn --project-name xray_vpn . --platforms android
           fi
-
-      - name: 📝 STEP 3 - Create main.dart
-        script: |
+          
           mkdir -p lib
-          
-          cat > lib/main.dart << "EOF"
-      import 'package:flutter/material.dart';
-      
-      void main() {
-        runApp(const MyApp());
-      }
-      
-      class MyApp extends StatelessWidget {
-        const MyApp({super.key});
-      
-        @override
-        Widget build(BuildContext context) {
-          return MaterialApp(
-            title: 'Xray VPN',
-            theme: ThemeData.dark(),
-            home: const HomePage(),
-          );
-        }
-      }
-      
-      class HomePage extends StatelessWidget {
-        const HomePage({super.key});
-      
-        @override
-        Widget build(BuildContext context) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Xray VPN'),
-              backgroundColor: Colors.blue,
-            ),
-            body: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.vpn_key, size: 80, color: Colors.blue),
-                  SizedBox(height: 20),
-                  Text(
-                    'Xray VPN Client',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  Text('Ready to connect'),
-                ],
-              ),
-            ),
-          );
-        }
-      }
-      EOF
-          
-          echo "✅ main.dart created"
 
-      - name: 📦 STEP 4 - Create pubspec.yaml
+      - name: 📝 Create main.dart
         script: |
-          cat > pubspec.yaml << "EOF"
-      name: xray_vpn
-      description: Xray VPN Client
-      version: 1.0.0+1
-      
-      environment:
-        sdk: ">=2.19.0 <4.0.0"
-      
-      dependencies:
-        flutter:
-          sdk: flutter
-      
-      dev_dependencies:
-        flutter_test:
-          sdk: flutter
-      
-      flutter:
-        uses-material-design: true
-      EOF
-          
-          echo "✅ pubspec.yaml created"
+          cat > lib/main.dart << 'DARTCODE'
+import 'package:flutter/material.dart';
 
-      - name: 📦 STEP 5 - Install dependencies
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Xray VPN',
+      theme: ThemeData.dark(),
+      home: const HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Xray VPN'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.vpn_key, size: 80, color: Colors.blue),
+            const SizedBox(height: 20),
+            const Text(
+              'Xray VPN Client',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text('Ready to connect'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+DARTCODE
+          
+          echo "main.dart created"
+
+      - name: 📝 Create pubspec.yaml
+        script: |
+          cat > pubspec.yaml << 'PUBSpec'
+name: xray_vpn
+description: Xray VPN Client
+version: 1.0.0+1
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+PUBSpec
+          
+          echo "pubspec.yaml created"
+
+      - name: 📦 Install dependencies
         script: |
           export PATH="$PATH":"$FLUTTER_ROOT/bin"
-          cd $CM_BUILD_DIR
           $FLUTTER_ROOT/bin/flutter clean
           $FLUTTER_ROOT/bin/flutter pub get
 
-      - name: 🛠 STEP 6 - Build APK
+      - name: 🔨 Build APK
         script: |
           export PATH="$PATH":"$FLUTTER_ROOT/bin"
-          cd $CM_BUILD_DIR
           $FLUTTER_ROOT/bin/flutter build apk --release
 
     artifacts:
