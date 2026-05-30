@@ -8,6 +8,7 @@ workflows:
       - name: Create project
         script: |
           flutter create --org com.xray.vpn --project-name xrayvpn .
+          
       - name: Create pubspec.yaml
         script: |
           cat > pubspec.yaml << 'EOF'
@@ -30,6 +31,7 @@ workflows:
       flutter:
         uses-material-design: true
       EOF
+          
       - name: Create main.dart
         script: |
           mkdir -p lib
@@ -60,10 +62,12 @@ workflows:
         }
       }
       EOF
+          
       - name: Build APK
         script: |
           flutter clean
           flutter pub get
           flutter build apk --release
+          
     artifacts:
       - "build/app/outputs/flutter-apk/*.apk"
