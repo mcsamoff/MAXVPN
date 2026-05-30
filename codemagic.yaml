@@ -1,13 +1,15 @@
 workflows:
-  build:
-    name: Build APK
+  xray-vpn-build:
+    name: Xray VPN Builder
     instance_type: mac_mini_m2
     environment:
       flutter: stable
     scripts:
-      - name: Create and build
+      - name: Create project
         script: |
           flutter create --org com.xray.vpn --project-name xrayvpn .
+      - name: Build APK
+        script: |
           flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
