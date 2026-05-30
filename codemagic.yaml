@@ -5,10 +5,9 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Build APK
+      - name: Create and build
         script: |
-          flutter clean
-          flutter pub get
+          flutter create --org com.xray.vpn --project-name xrayvpn .
           flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
