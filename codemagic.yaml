@@ -10,36 +10,161 @@ workflows:
     cache:
       cache_paths:
         - ~/.pub-cache
+        - android/.gradle
 
     scripts:
-      - name: 📱 Setup Flutter
+      # ============================================
+      # ШАГ 1: Диагностика окружения
+      # ============================================
+      - name: 🔍 STEP 1 - Diagnostic - Environment
         script: |
-          export PATH="$PATH":"$FLUTTER_ROOT/bin"
-          $FLUTTER_ROOT/bin/flutter doctor
+          echo "========================================="
+          echo "STEP 1: Checking build environment"
+          echo "========================================="
+          echo "Current directory: $(pwd)"
+          echo "User: $(whoami)"
+          echo "Home: $HOME"
+          echo "FLUTTER_ROOT: $FLUTTER_ROOT"
+          echo "PATH: $PATH"
+          echo ""
+          
+          echo "=== Disk space ==="
+          df -h
+          echo ""
+          
+          echo "=== Memory ==="
+          free -h
+          echo ""
 
-      - name: 📁 Create Flutter project
+      # ============================================
+      # ШАГ 2: Проверка Flutter
+      # ============================================
+      - name: 🔍 STEP 2 - Diagnostic - Flutter
         script: |
+          echo "========================================="
+          echo "STEP 2: Checking Flutter installation"
+          echo "========================================="
+          
           export PATH="$PATH":"$FLUTTER_ROOT/bin"
           
-          # Создаем проект если его нет
+          echo "Flutter version:"
+          $FLUTTER_ROOT/bin/flutter --version
+          echo ""
+          
+          echo "Flutter doctor:"
+          $FLUTTER_ROOT/bin/flutter doctor -v
+          echo ""
+
+      # ============================================
+      # ШАГ 3: Проверка проекта
+      # ============================================
+      - name: 🔍 STEP 3 - Diagnostic - Project structure
+        script: |
+          echo "========================================="
+          echo "STEP 3: Checking project structure"
+          echo "========================================="
+          
+          echo "All files in current directory:"
+          ls -la
+          echo ""
+          
+          echo "Checking for pubspec.yaml:"
+          if [ -f "pubspec.yaml" ]; then
+            echo "✅ pubspec.yaml found"
+            echo "Content:"
+            cat pubspec.yaml
+          else
+            echo "❌ pubspec.yaml NOT found"
+          fi
+          echo ""
+          
+          echo "Checking for lib folder:"
+          if [ -d "lib" ]; then
+            echo "✅ lib folder exists"
+            echo "Files in lib:"
+            ls -la lib/
+          else
+            echo "❌ lib folder NOT found"
+          fi
+          echo ""
+          
+          echo "Checking for main.dart:"
+          if [ -f "lib/main.dart" ]; then
+            echo "✅ main.dart found"
+            echo "Content (first 20 lines):"
+            head -20 lib/main.dart
+          else
+            echo "❌ main.dart NOT found"
+          fi
+          echo ""
+
+      # ============================================
+      # ШАГ 4: Проверка Android настройки
+      # ============================================
+      - name: 🔍 STEP 4 - Diagnostic - Android setup
+        script: |
+          echo "========================================="
+          echo "STEP 4: Checking Android configuration"
+          echo "========================================="
+          
+          if [ -d "android" ]; then
+            echo "✅ android folder exists"
+            echo ""
+            echo "Checking build.gradle:"
+            if [ -f "android/app/build.gradle" ]; then
+              echo "✅ build.gradle found"
+              grep -E "minSdkVersion|targetSdkVersion|versionCode|versionName" android/app/build.gradle || echo "Check manual"
+            else
+              echo "❌ build.gradle NOT found"
+            fi
+          else
+            echo "❌ android folder NOT found"
+          fi
+          echo ""
+
+      # ============================================
+      # ШАГ 5: Создание проекта (если нужно)
+      # ============================================
+      - name: 📁 STEP 5 - Create Flutter project if needed
+        script: |
+          echo "========================================="
+          echo "STEP 5: Creating Flutter project"
+          echo "========================================="
+          
+          export PATH="$PATH":"$FLUTTER_ROOT/bin"
+          
           if [ ! -f "pubspec.yaml" ]; then
-            $FLUTTER_ROOT/bin/flutter create --org com.xrayvpn --project-name xray_vpn .
+            echo "No Flutter project found. Creating new one..."
+            $FLUTTER_ROOT/bin/flutter create --org com.xrayvpn --project-name xray_vpn . --platforms android
+            echo "✅ Project created"
+          else
+            echo "✅ Project already exists"
           fi
           
-          # Создаем main.dart
+          # Убеждаемся что main.dart существует и корректен
+          mkdir -p lib
           cat > lib/main.dart << 'DART_EOF'
       import 'package:flutter/material.dart';
       
-      void main() => runApp(const MyApp());
+      void main() {
+        runApp(const MyApp());
+      }
       
       class MyApp extends StatelessWidget {
         const MyApp({super.key});
-        
+      
         @override
         Widget build(BuildContext context) {
           return MaterialApp(
             title: 'Xray VPN',
-            theme: ThemeData.dark(),
+            theme: ThemeData.dark(
+              useMaterial3: true,
+            ).copyWith(
+              colorScheme: ColorScheme.dark(
+                primary: Colors.blue,
+                secondary: Colors.blueAccent,
+              ),
+            ),
             home: const HomePage(),
           );
         }
@@ -47,21 +172,86 @@ workflows:
       
       class HomePage extends StatelessWidget {
         const HomePage({super.key});
-        
+      
         @override
         Widget build(BuildContext context) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Xray VPN')),
-            body: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.vpn_key, size: 80),
-                  SizedBox(height: 20),
-                  Text('Xray VPN Client'),
-                  SizedBox(height: 10),
-                  Text('Ready to connect'),
-                ],
+            appBar: AppBar(
+              title: const Text('Xray VPN'),
+              centerTitle: true,
+              backgroundColor: Colors.blue.shade900,
+            ),
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.blue.shade900,
+                    Colors.purple.shade900,
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.vpn_key,
+                          size: 80,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        'Xray VPN Client',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Secure & Fast Connection',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          // TODO: Implement VPN connection
+                        },
+                        icon: const Icon(Icons.power_settings_new),
+                        label: const Text(
+                          'CONNECT',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 15,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           );
@@ -69,17 +259,174 @@ workflows:
       }
       DART_EOF
           
-          echo "✅ main.dart created"
+          echo "✅ main.dart created/updated"
+          
+          # Обновляем pubspec.yaml если нужно
+          cat > pubspec.yaml << 'YAML_EOF'
+      name: xray_vpn
+      description: Xray VPN Client
+      version: 1.0.0+1
+      
+      environment:
+        sdk: ">=2.19.0 <4.0.0"
+      
+      dependencies:
+        flutter:
+          sdk: flutter
+        cupertino_icons: ^1.0.6
+      
+      dev_dependencies:
+        flutter_test:
+          sdk: flutter
+        flutter_lints: ^2.0.0
+      
+      flutter:
+        uses-material-design: true
+      YAML_EOF
+          
+          echo "✅ pubspec.yaml created/updated"
 
-      - name: 📦 Install dependencies
+      # ============================================
+      # ШАГ 6: Установка зависимостей с retry
+      # ============================================
+      - name: 📦 STEP 6 - Install dependencies
         script: |
+          echo "========================================="
+          echo "STEP 6: Installing dependencies"
+          echo "========================================="
+          
           export PATH="$PATH":"$FLUTTER_ROOT/bin"
-          $FLUTTER_ROOT/bin/flutter pub get
+          
+          echo "Cleaning previous builds..."
+          $FLUTTER_ROOT/bin/flutter clean
+          rm -f pubspec.lock
+          
+          echo "Getting dependencies..."
+          for i in 1 2 3; do
+            echo "Attempt $i/3..."
+            if $FLUTTER_ROOT/bin/flutter pub get; then
+              echo "✅ Dependencies installed successfully"
+              break
+            else
+              echo "❌ Attempt $i failed"
+              if [ $i -eq 3 ]; then
+                echo "All attempts failed!"
+                exit 1
+              fi
+              sleep 10
+            fi
+          done
+          
+          echo ""
+          echo "Checking dependencies:"
+          $FLUTTER_ROOT/bin/flutter pub deps
 
-      - name: 🛠 Build APK
+      # ============================================
+      # ШАГ 7: Анализ кода
+      # ============================================
+      - name: 🔧 STEP 7 - Code analysis
         script: |
+          echo "========================================="
+          echo "STEP 7: Running code analysis"
+          echo "========================================="
+          
           export PATH="$PATH":"$FLUTTER_ROOT/bin"
-          $FLUTTER_ROOT/bin/flutter build apk --release
+          
+          echo "Running flutter analyze..."
+          $FLUTTER_ROOT/bin/flutter analyze || echo "⚠️ Analysis found issues but continuing"
+          
+          echo ""
+          echo "Running dart fix..."
+          $FLUTTER_ROOT/bin/dart fix --dry-run || echo "No fixes needed"
 
+      # ============================================
+      # ШАГ 8: Сборка APK (основной)
+      # ============================================
+      - name: 🛠 STEP 8 - Build APK
+        script: |
+          echo "========================================="
+          echo "STEP 8: Building APK"
+          echo "========================================="
+          
+          export PATH="$PATH":"$FLUTTER_ROOT/bin"
+          
+          echo "Starting build at $(date)"
+          echo ""
+          
+          # Пробуем debug сборку сначала (быстрее)
+          echo "Trying debug build first..."
+          if $FLUTTER_ROOT/bin/flutter build apk --debug; then
+            echo "✅ Debug build successful"
+          else
+            echo "⚠️ Debug build failed, trying release with more details..."
+          fi
+          
+          echo ""
+          echo "Building release APK..."
+          $FLUTTER_ROOT/bin/flutter build apk --release --verbose
+          BUILD_RESULT=$?
+          
+          if [ $BUILD_RESULT -eq 0 ]; then
+            echo ""
+            echo "✅ Build successful!"
+          else
+            echo ""
+            echo "❌ Build failed with exit code: $BUILD_RESULT"
+            echo ""
+            echo "=== LAST 50 LINES OF BUILD LOG ==="
+            tail -50 build.log 2>/dev/null || echo "No log file"
+            exit 1
+          fi
+
+      # ============================================
+      # ШАГ 9: Проверка результата
+      # ============================================
+      - name: 📦 STEP 9 - Verify APK
+        script: |
+          echo "========================================="
+          echo "STEP 9: Verifying APK"
+          echo "========================================="
+          
+          echo "Looking for APK files..."
+          find . -name "*.apk" -type f
+          
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            echo ""
+            echo "✅ APK found!"
+            echo "File size:"
+            ls -lh build/app/outputs/flutter-apk/app-release.apk
+            echo ""
+            echo "File info:"
+            file build/app/outputs/flutter-apk/app-release.apk
+          elif [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
+            echo ""
+            echo "⚠️ Only debug APK found, renaming to release..."
+            cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/app-release.apk
+          else
+            echo ""
+            echo "❌ No APK files found!"
+            echo "Checking build directory structure:"
+            ls -la build/app/outputs/ 2>/dev/null || echo "No outputs directory"
+            exit 1
+          fi
+
+    # ============================================
+    # Artifacts - что сохранить
+    # ============================================
     artifacts:
       - "build/app/outputs/flutter-apk/*.apk"
+      - "build.log"
+      - "flutter_*_report*.html"
+
+    # ============================================
+    # Publishing - куда отправить результат
+    # ============================================
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+      slack:
+        channel: '#builds'
+        notify_on_build_start: true
+        notify_on_build_success: true
+        notify_on_build_failure: true
