@@ -1,5 +1,5 @@
 workflows:
-  xray-vpn-build:
+  MAXVPN:
     name: Build APK
     instance_type: mac_mini_m2
     environment:
@@ -12,7 +12,7 @@ workflows:
       - name: Create pubspec.yaml
         script: |
           cat > pubspec.yaml << EOF
-      name: xrayvpn
+      name: Build APK
       description: Xray VPN Client
       version: 1.0.0+1
       publish_to: none
